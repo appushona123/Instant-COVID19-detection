@@ -1,0 +1,91 @@
+# This project is part of the COVID-19 global hackathon
+# Author: Amitabh Bhattacharya
+# Student & GRA, University of North Florida, Jacksonville
+# email: a.bhattacharya@unf.edu
+# phone: +1 (904) 240-2777
+
+import pandas as pd
+import numpy as np
+import scipy as sc
+
+import math
+import os
+import random
+from glob import glob
+import warnings
+warnings.filterwarnings("ignore")
+
+import matplotlib.pyplot as plt
+from PIL import Image
+import seaborn as sns
+import cv2
+
+import tensorflow as tf
+import keras
+from keras import layers
+from keras.layers.core import Layer
+from keras.layers import Input, Dense, Activation, ZeroPadding2D, BatchNormalization, Flatten, Conv2D, Concatenate, Reshape
+from keras.layers import AveragePooling2D, MaxPooling2D, Dropout, GlobalMaxPooling2D, GlobalAveragePooling2D
+from keras.models import Model
+from keras.models import load_model
+from keras.utils import layer_utils
+from keras.utils.data_utils import get_file
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+from keras.preprocessing.image import array_to_img
+
+from keras.regularizers import l2
+from keras.optimizers import SGD
+
+from tkinter import *
+from tkinter.filedialog import askopenfile, askopenfilename
+
+window = Tk()
+
+window.title("Welcome to COVID testing app")
+
+window.geometry('350x200')
+
+lbl = Label(window, text="")
+lbl.grid(column=0, row=5)
+
+test_img_filename = ''
+def browsefunc():
+    global test_img_filename
+    test_img_filename = askopenfilename()
+    
+
+btn2 = Button(window, text="Browse Radiography Image", command=browsefunc)
+btn2.grid(column=1, row=1)
+
+
+def covidCheck():
+    global test_img_filename
+    
+    saved_covid19Model = load_model('.\\covid19Model')    
+     
+    test_img_orig = cv2.imread(test_img_filename)
+    test_img_resized = cv2.resize(test_img_orig, (256, 256), interpolation=cv2.INTER_CUBIC)
+    test_img_array = img_to_array(test_img_resized)
+    test_img_array = test_img_array/255
+    test_img_array = np.expand_dims(test_img_array, axis=0)
+
+    # plt.imshow(test_img_orig)
+    # print("Test image prediction(1 is Covid and 0 is normal): ", saved_covid19Model.predict(test_img_array))
+    
+    result = saved_covid19Model.predict(test_img_array)   
+    result = np.squeeze(result)
+    result = np.squeeze(result)
+    
+    if result > 0.5:
+        output = "Confirmed COVID case"
+    else:
+        output = "Not a COVID case"
+    
+    lbl.configure(text=output)
+    # lbl.grid(column=1, row=5)
+
+btn = Button(window, text="Click to check", command=covidCheck)
+btn.grid(column=1, row=3)
+
+window.mainloop()
